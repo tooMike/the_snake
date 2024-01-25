@@ -47,10 +47,7 @@ clock = pygame.time.Clock()
 
 # Тут опишите все классы игры.
 class GameObject:
-    position = START_POSITION
-    body_color = None
-
-    def __init__(self, position = ((SCREEN_WIDTH // 2), (SCREEN_HEIGHT // 2)), body_color = None):
+    def __init__(self, position = START_POSITION, body_color = None):
         self.position = position
         self.body_color = body_color
 
@@ -59,12 +56,9 @@ class GameObject:
 
 
 class Snake(GameObject):
-    body_color = SNAKE_COLOR
-    positions = [START_POSITION]
-
     def __init__(self):
-        self.positions = Snake.positions
-        self.body_color = self.body_color
+        super().__init__(position=START_POSITION, body_color=SNAKE_COLOR)
+        self.positions = [self.position]
         self.last = None
         self.length = 1
         self.direction = RIGHT
@@ -141,11 +135,9 @@ class Snake(GameObject):
 
 
 class Apple(GameObject):
-    body_color = APPLE_COLOR
-
     def __init__(self):
-        self.body_color = Apple.body_color
-        self.position = self.randomize_position()
+        super().__init__(position=self.randomize_position(), body_color=APPLE_COLOR)
+        self.position = (self.position)
 
     # Генерация рандомной позиции яблока на игровом поле
     def randomize_position(self):
