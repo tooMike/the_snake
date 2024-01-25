@@ -80,7 +80,7 @@ class Snake(GameObject):
         head_position = self.get_head_position()
         move_direction = self.direction
 
-        # Проверяем будет ли следующее перемещение по горизонтали или вертикали.
+        # Проверяем будет ли следующее перемещение по горизонтали или вертикали
         # Если перемещение по горизонтали.
         if move_direction[0]:
             dx = move_direction[0] * GRID_SIZE
@@ -92,7 +92,7 @@ class Snake(GameObject):
                 # Если НЕ вышли за границы поля.
                 dx = head_position[0] + dx
             dy = head_position[1]
-        # Делаем аналогичную проверку и вычисления для перемещения по вертикали.
+        # Делаем аналогичную проверку и вычисления для перемещения по вертикали
         else:
             dy = move_direction[1] * GRID_SIZE
             if not 0 <= head_position[1] + dy <= SCREEN_HEIGHT - GRID_SIZE:
