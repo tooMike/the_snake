@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from pygame.time import Clock
+from pg.time import Clock
 import pytest
 import pytest_timeout
 
