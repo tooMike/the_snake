@@ -54,7 +54,7 @@ class GameObject:
         self.body_color = body_color
         self.border_color = border_color
 
-    def draw_cell(self, surface, position, body_color=None, border_color=None):
+    def draw(self, surface, position, body_color=None, border_color=None):
         """Раскрашивание 1 ячейки игрового поля"""
         object_rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(surface, body_color, object_rect)
@@ -112,12 +112,12 @@ class Snake(GameObject):
         обращаеся к методу draw() родительского класс
         """
         # Отрисовка ховста змейки.
-        self.draw_cell(surface, self.positions[len(self.positions) - 1],
-                       self.body_color, self.border_color)
+        self.draw(surface, self.positions[len(self.positions) - 1],
+                  self.body_color, self.border_color)
 
         # Отрисовка головы змейки.
-        self.draw_cell(surface, self.positions[0],
-                       self.body_color, self.border_color)
+        self.draw(surface, self.positions[0],
+                  self.body_color, self.border_color)
 
         # Затирание последнего сегмента.
         if self.last:
@@ -152,8 +152,8 @@ class Apple(GameObject):
         """Метод для отрисовки яблока,
         обращаемся к методы draw() родительского класса
         """
-        self.draw_cell(surface, (self.position[0], self.position[1]),
-                       self.body_color, self.border_color)
+        self.draw(surface, (self.position[0], self.position[1]),
+                  self.body_color, self.border_color)
 
 
 def handle_keys(game_object):
