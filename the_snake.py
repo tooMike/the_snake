@@ -113,11 +113,11 @@ class Snake(GameObject):
         """
         # Отрисовка ховста змейки.
         self.draw_cell(surface, self.positions[len(self.positions) - 1],
-                  self.body_color, self.border_color)
+                       self.body_color, self.border_color)
 
         # Отрисовка головы змейки.
         self.draw_cell(surface, self.positions[0],
-                  self.body_color, self.border_color)
+                       self.body_color, self.border_color)
 
         # Затирание последнего сегмента.
         if self.last:
@@ -145,7 +145,7 @@ class Apple(GameObject):
         if position in positions:
             while position in positions:
                 position = (randrange(0, SCREEN_WIDTH - GRID_SIZE, GRID_SIZE),
-                    randrange(0, SCREEN_HEIGHT - GRID_SIZE, GRID_SIZE))
+                            randrange(0, SCREEN_HEIGHT - GRID_SIZE, GRID_SIZE))
         self.position = position
 
     def draw_apple(self, surface):
@@ -153,7 +153,7 @@ class Apple(GameObject):
         обращаемся к методы draw() родительского класса
         """
         self.draw_cell(surface, (self.position[0], self.position[1]),
-                  self.body_color, self.border_color)
+                       self.body_color, self.border_color)
 
 
 def handle_keys(game_object):
