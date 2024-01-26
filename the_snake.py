@@ -45,7 +45,6 @@ pg.display.set_caption('Змейка')
 clock = pg.time.Clock()
 
 
-# Тут опишите все классы игры.
 class GameObject:
     """Родительский класс"""
 
@@ -55,7 +54,7 @@ class GameObject:
         self.body_color = body_color
         self.border_color = border_color
 
-    def draw(self, surface, position, body_color=None, border_color=None):
+    def draw_cell(self, surface, position, body_color=None, border_color=None):
         """Раскрашивание 1 ячейки игрового поля"""
         object_rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(surface, body_color, object_rect)
@@ -68,7 +67,6 @@ class Snake(GameObject):
     def __init__(self):
         super().__init__(position=START_POSITION, body_color=SNAKE_COLOR)
         self.reset()
-        self.direction = RIGHT
 
     def update_direction(self):
         """Метод обновления направления после нажатия на кнопку"""
@@ -114,11 +112,11 @@ class Snake(GameObject):
         обращаеся к методу draw() родительского класс
         """
         # Отрисовка ховста змейки.
-        self.draw(surface, self.positions[len(self.positions) - 1],
+        self.draw_cell(surface, self.positions[len(self.positions) - 1],
                   self.body_color, self.border_color)
 
         # Отрисовка головы змейки.
-        self.draw(surface, self.positions[0],
+        self.draw_cell(surface, self.positions[0],
                   self.body_color, self.border_color)
 
         # Затирание последнего сегмента.
@@ -137,20 +135,24 @@ class Apple(GameObject):
         super().__init__(body_color)
         self.randomize_position()
 
-    def randomize_position(self, positions=START_POSITION):
+    def randomize_position(self, positions=[START_POSITION]):
         """Генерация рандомной позиции яблока на игровом поле"""
-        for _ in range(len(positions)):
-            position = (randrange(0, SCREEN_WIDTH - GRID_SIZE, GRID_SIZE),
-                        randrange(0, SCREEN_HEIGHT - GRID_SIZE, GRID_SIZE))
-            if position not in positions:
-                self.position = position
-                break
+        # Генерируем рандомную позицию
+        position = (randrange(0, SCREEN_WIDTH - GRID_SIZE, GRID_SIZE),
+                    randrange(0, SCREEN_HEIGHT - GRID_SIZE, GRID_SIZE))
+        # Если она совпала с одной из координат змейки, то генерим новые
+        # координаты, пока не попадем мимо змейки
+        if position in positions:
+            while position in positions:
+                position = (randrange(0, SCREEN_WIDTH - GRID_SIZE, GRID_SIZE),
+                    randrange(0, SCREEN_HEIGHT - GRID_SIZE, GRID_SIZE))
+        self.position = position
 
     def draw_apple(self, surface):
         """Метод для отрисовки яблока,
         обращаемся к методы draw() родительского класса
         """
-        self.draw(surface, (self.position[0], self.position[1]),
+        self.draw_cell(surface, (self.position[0], self.position[1]),
                   self.body_color, self.border_color)
 
 
@@ -177,7 +179,6 @@ def handle_keys(game_object):
 
 def main():
     """Основаня исполнительная функция игры"""
-    # Тут создаем экземпляры классов.
     snake = Snake()
     apple = Apple()
     screen.fill(BOARD_BACKGROUND_COLOR)
