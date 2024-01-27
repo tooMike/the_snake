@@ -143,7 +143,7 @@ class Apple(GameObject):
         """Генерация рандомной позиции яблока на игровом поле"""
         # определяем допустимый диапозон по ширине и высоте
         position_range_x = SCREEN_WIDTH - GRID_SIZE
-        position_range_y = GRID_HEIGHT - GRID_SIZE
+        position_range_y = SCREEN_HEIGHT - GRID_SIZE
         # Генерируем рандомную позицию
         self.position = (randrange(0, position_range_x, GRID_SIZE),
                          randrange(0, position_range_y, GRID_SIZE))
