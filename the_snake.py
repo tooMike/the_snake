@@ -141,14 +141,17 @@ class Apple(GameObject):
 
     def randomize_position(self, positions=[START_POSITION]):
         """Генерация рандомной позиции яблока на игровом поле"""
+        # определяем допустимый диапозон по ширине и высоте
+        position_range_x = SCREEN_WIDTH - GRID_SIZE
+        position_range_y = SCREEN_WIDTH - GRID_SIZE
         # Генерируем рандомную позицию
-        self.position = (randrange(0, SCREEN_WIDTH - GRID_SIZE, GRID_SIZE),
-                    randrange(0, SCREEN_HEIGHT - GRID_SIZE, GRID_SIZE))
+        self.position = (randrange(0, position_range_x, GRID_SIZE),
+                         randrange(0, position_range_y, GRID_SIZE))
         # Если она совпала с одной из координат змейки, то генерим новые
         # координаты, пока не попадем мимо змейки
         while self.position in positions:
-            self.position = (randrange(0, SCREEN_WIDTH - GRID_SIZE, GRID_SIZE),
-                             randrange(0, SCREEN_HEIGHT - GRID_SIZE, GRID_SIZE))
+            self.position = (randrange(0, position_range_x, GRID_SIZE),
+                             randrange(0, position_range_y, GRID_SIZE))
 
     def draw(self, surface):
         """Метод для отрисовки яблока,
