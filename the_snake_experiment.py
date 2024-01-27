@@ -28,6 +28,7 @@ APPLE_COLOR = (255, 0, 0)
 
 # Цвет змейки
 SNAKE_COLOR = (0, 255, 0)
+SNAKE_COLOR_2 = (0, 0, 255)
 
 # Скорость движения змейки:
 SPEED = 15
@@ -43,6 +44,7 @@ pg.display.set_caption('Змейка')
 
 # Настройка времени:
 clock = pg.time.Clock()
+
 
 
 class GameObject:
@@ -68,9 +70,11 @@ class GameObject:
 class Snake(GameObject):
     """Класс для описания змейки"""
 
-    def __init__(self):
-        super().__init__(position=START_POSITION, body_color=SNAKE_COLOR)
+    def __init__(self, body_color_2=SNAKE_COLOR_2):
+        super().__init__(position=START_POSITION, 
+                         body_color=SNAKE_COLOR)
         self.reset()
+        self.body_color_2 = body_color_2
 
     def update_direction(self):
         """Метод обновления направления после нажатия на кнопку"""
@@ -115,13 +119,17 @@ class Snake(GameObject):
         """Метод для отрисовки змейки
         обращаеся к методу draw() родительского класс
         """
-        # Отрисовка ховста змейки.
-        self.draw_cell(surface, self.positions[len(self.positions) - 1],
-                       self.body_color, self.border_color)
+        # # Отрисовка ховста змейки.
+        # self.draw_cell(surface, self.positions[len(self.positions) - 1],
+        #                self.body_color, self.border_color)
 
         # Отрисовка головы змейки.
-        self.draw_cell(surface, self.positions[0],
-                       self.body_color, self.border_color)
+        if self.length % 2 == 0:
+            self.draw_cell(surface, self.positions[0],
+                        self.body_color, self.border_color)
+        else:
+            self.draw_cell(surface, self.positions[0],
+                        self.body_color_2, self.border_color)
 
         # Затирание последнего сегмента.
         if self.last:
@@ -143,7 +151,7 @@ class Apple(GameObject):
         """Генерация рандомной позиции яблока на игровом поле"""
         # определяем допустимый диапозон по ширине и высоте
         position_range_x = SCREEN_WIDTH - GRID_SIZE
-        position_range_y = GRID_HEIGHT - GRID_SIZE
+        position_range_y = SCREEN_WIDTH - GRID_SIZE
         # Генерируем рандомную позицию
         self.position = (randrange(0, position_range_x, GRID_SIZE),
                          randrange(0, position_range_y, GRID_SIZE))
