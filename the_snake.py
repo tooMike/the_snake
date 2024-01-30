@@ -1,4 +1,6 @@
-from random import choice, randrange
+from random import randint
+from source.game_objects import Apple, Snail, Snake, Obstacle
+from source.constants import *
 
 import pygame as pg
 
@@ -10,6 +12,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 GRID_SIZE = 20
 GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
 GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
+RESULT_HEIGHT = 50
 
 # Направления движения:
 UP = (0, -1)
@@ -24,19 +27,30 @@ BOARD_BACKGROUND_COLOR = (0, 0, 0)
 BORDER_COLOR = (93, 216, 228)
 
 # Цвет яблока
-APPLE_COLOR = (255, 0, 0)
+APPLE_COLOR = (139, 0, 0)
 
 # Цвет змейки
-SNAKE_COLOR = (0, 255, 0)
+SNAKE_COLOR = (240, 255, 255)
+SNAKE_COLOR_2 = (0, 191, 255)
 
-# Скорость движения змейки:
-SPEED = 15
+# Цвет препятствия
+OBSTACLE_COLOR = (178, 34, 34)
+
+# Цвет поля для ведения счета
+RESULT_COLOR = (240, 255, 255)
 
 # Начальная позиция (середина экрана)
 START_POSITION = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 
 # Настройка игрового окна:
-screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
+screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + RESULT_HEIGHT),
+                             0, 32)
+
+# Определение областей
+rect_game = pg.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+rect_game_score = pg.Rect(0, SCREEN_HEIGHT, SCREEN_WIDTH, RESULT_HEIGHT // 2)
+rect_speed = pg.Rect(0, SCREEN_HEIGHT + RESULT_HEIGHT // 2,
+                     SCREEN_WIDTH, SCREEN_HEIGHT // 2)
 
 # Заголовок окна игрового поля:
 pg.display.set_caption('Змейка')
@@ -44,121 +58,38 @@ pg.display.set_caption('Змейка')
 # Настройка времени:
 clock = pg.time.Clock()
 
+# Добавляем шрифт
+font = pg.font.SysFont('couriernew', 20)
 
-class GameObject:
-    """Родительский класс"""
-
-    def __init__(self, position=START_POSITION,
-                 body_color=APPLE_COLOR, border_color=BORDER_COLOR):
-        self.position = position
-        self.body_color = body_color
-        self.border_color = border_color
-
-    def draw(self):
-        """Метод для отрисовки объектов"""
-        raise NotImplementedError('Будет реализован в дочерних классах')
-
-    def draw_cell(self, surface, position, body_color=None, border_color=None):
-        """Раскрашивание 1 ячейки игрового поля"""
-        object_rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
-        pg.draw.rect(surface, body_color, object_rect)
-        pg.draw.rect(surface, border_color, object_rect, 1)
+# Загружаем картинку
+apple_image = pg.image.load('images/apple.png')
+snail_image = pg.image.load('images/snail.png')
 
 
-class Snake(GameObject):
-    """Класс для описания змейки"""
+class Text():
+    """Класс текста"""
 
-    def __init__(self):
-        super().__init__(position=START_POSITION, body_color=SNAKE_COLOR)
-        self.reset()
+    def __init__(self,
+                 background_rect,
+                 background_color=RESULT_COLOR,
+                 color=(0, 0, 0)):
+        self.background_rect = background_rect
+        self.background_color = background_color
+        self.color = color
+        screen.fill(self.background_color, self.background_rect)
 
-    def update_direction(self):
-        """Метод обновления направления после нажатия на кнопку"""
-        if self.next_direction:
-            self.direction = self.next_direction
-            self.next_direction = None
+    def print_text(self, text, text_position):
+        """Метод для отрисовки текста"""
+        screen.fill(self.background_color, self.background_rect)
+        self.text = font.render(text, True, self.color)
+        screen.blit(self.text, text_position)
 
-    def move(self):
-        """Метод для создания движения змейки"""
-        head_position = self.get_head_position()
-        move_direction = self.direction
-
-        # Вычисляем новые координаты
-        dx = (head_position[0] + move_direction[0] * GRID_SIZE) % SCREEN_WIDTH
-        dy = (head_position[1] + move_direction[1] * GRID_SIZE) % SCREEN_HEIGHT
-
-        # Добавляем новую координату головы змейки.
-        self.positions.insert(0, (dx, dy))
-
-        # Проверяем не укусила ли змея сама себя.
-        if (dx, dy) in self.positions[2:]:
-            self.reset()
-
-        # Проверяем не съела ли змея яблоко.
-        if len(self.positions) > self.length:
-            self.last = self.positions.pop(len(self.positions) - 1)
-
-    def get_head_position(self):
-        """Метод возвращает позицию головы змейки"""
-        return self.positions[0]
-
-    def reset(self):
-        """Метод возвращает характеристики змейки в первоначальным"""
-        self.length = 1
-        self.positions = [START_POSITION]
-        self.direction = choice([UP, DOWN, LEFT, RIGHT])
-        self.next_direction = None
-        self.last = None
-        screen.fill(BOARD_BACKGROUND_COLOR)
-
-    def draw(self, surface):
-        """Метод для отрисовки змейки
-        обращаеся к методу draw() родительского класс
-        """
-        # Отрисовка ховста змейки.
-        self.draw_cell(surface, self.positions[len(self.positions) - 1],
-                       self.body_color, self.border_color)
-
-        # Отрисовка головы змейки.
-        self.draw_cell(surface, self.positions[0],
-                       self.body_color, self.border_color)
-
-        # Затирание последнего сегмента.
-        if self.last:
-            last_rect = pg.Rect(
-                (self.last[0], self.last[1]),
-                (GRID_SIZE, GRID_SIZE)
-            )
-            pg.draw.rect(surface, BOARD_BACKGROUND_COLOR, last_rect)
-
-
-class Apple(GameObject):
-    """Класс для описания яблока"""
-
-    def __init__(self, body_color=APPLE_COLOR):
-        super().__init__(body_color)
-        self.randomize_position()
-
-    def randomize_position(self, positions=[START_POSITION]):
-        """Генерация рандомной позиции яблока на игровом поле"""
-        # определяем допустимый диапозон по ширине и высоте
-        position_range_x = SCREEN_WIDTH - GRID_SIZE
-        position_range_y = SCREEN_HEIGHT - GRID_SIZE
-        # Генерируем рандомную позицию
-        self.position = (randrange(0, position_range_x, GRID_SIZE),
-                         randrange(0, position_range_y, GRID_SIZE))
-        # Если она совпала с одной из координат змейки, то генерим новые
-        # координаты, пока не попадем мимо змейки
-        while self.position in positions:
-            self.position = (randrange(0, position_range_x, GRID_SIZE),
-                             randrange(0, position_range_y, GRID_SIZE))
-
-    def draw(self, surface):
-        """Метод для отрисовки яблока,
-        обращаемся к методы draw() родительского класса
-        """
-        self.draw_cell(surface, (self.position[0], self.position[1]),
-                       self.body_color, self.border_color)
+    def print_text_centre(self, text, vert_pos):
+        """Метод для отрисовки текста с выравниванием по центру"""
+        self.text = font.render(text, True, self.color)
+        self.text_rect = self.text.get_rect(center=(SCREEN_WIDTH // 2,
+                                            vert_pos))
+        screen.blit(self.text, self.text_rect)
 
 
 def handle_keys(game_object):
@@ -184,22 +115,123 @@ def handle_keys(game_object):
 
 def main():
     """Основаня исполнительная функция игры"""
+    # Начальная скорость движения змейки:
+    speed = 15
+    obstacle_timer = 0
+    obstacle_visible = False
+
     snake = Snake()
     apple = Apple()
-    screen.fill(BOARD_BACKGROUND_COLOR)
+    snail = Snail()
+    obstacle = Obstacle()
+    # Делаем заливку игрового поля
+    screen.fill(BOARD_BACKGROUND_COLOR, rect_game)
+    # Добавляем счетчики очков
+    score_text = Text(background_rect=rect_game_score)
+    speed_text = Text(background_rect=rect_speed)
+    score_text.print_text(text=f'Съедено яблок: {snake.length - 1}',
+                          text_position=(10, SCREEN_HEIGHT))
+    speed_text.print_text(text=f'Ваша скорость: {speed}',
+                          text_position=(10,
+                                         SCREEN_HEIGHT + RESULT_HEIGHT // 2))
+    running = True
 
-    while True:
-        clock.tick(SPEED)
+    while running:
+        # Задаем скорость игры
+        clock.tick(speed)
 
-        apple.draw(screen)
+        # Время в миллисекундах для появления/исчезновени
+        obstacle_duration = randint(5000, 25000)
+
+        # Рисуем яблоко и улитку
+        apple.draw()
+        snail.draw()
+
+        # Проверяем нажатие клавиш и делаем ход
         handle_keys(snake)
         snake.update_direction()
         snake.move()
+
+        # Обновление препятствий
+        obstacle_timer += speed * 10
+        if obstacle_timer >= obstacle_duration:
+            obstacle_visible = not obstacle_visible
+            obstacle_timer = 0
+            if obstacle_visible:
+                obstacle.randomize_position(snake_positions=snake.positions,
+                                            apple_position=apple.position,
+                                            snail_position=snail.position)
+                obstacle.draw(screen)
+            else:
+                obstacle.delete(screen)
+                obstacle.position = []
+
+        # Рисуем змею
         snake.draw(screen)
 
+        # Если змея съела яблоко:
         if snake.positions[0] == apple.position:
+            # Увеличиваем длину змеи на 1
             snake.length += 1
+            # Увеличиваем скорость змеи на 1
+            speed += 1
+            # Задаем яблоку новые рандомные координаты
             apple.randomize_position(snake.positions)
+            # Стираем текущее яблоко
+            pg.display.update(apple.apple_rect)
+            # Обновляем счет игры
+            score_text.print_text(f'Съедено яблок: {snake.length - 1}',
+                                  text_position=(10, SCREEN_HEIGHT))
+            # Обновляем счетчик скорости
+            speed_text.print_text(f'Ваша скорость: {speed}',
+                                  text_position=(10, SCREEN_HEIGHT
+                                                 + RESULT_HEIGHT // 2))
+
+        # Если змея съела улитку:
+        if snake.positions[0] == snail.position:
+            # Уменьшаем скорость змеи на 1
+            speed -= 1
+            # Задаем улитке новые рандомные координаты
+            snail.randomize_position(snake.positions)
+            # Стираем текущую улитку
+            pg.display.update(snail.snail_rect)
+            # Обновляем счетчик скорости
+            speed_text.print_text(f'Ваша скорость: {speed}',
+                                  text_position=(10, SCREEN_HEIGHT
+                                                 + RESULT_HEIGHT // 2))
+
+        # Если змея попала на препятствие:
+        if snake.positions[0] in obstacle.position:
+            # Прерываем игровой цикл и перекидывает на экран выбора действий
+            running = False
+
+        pg.display.update()
+
+    show_result = True
+    while show_result:
+        clock.tick(speed)
+        # Добавляем текст на игровое поле
+        game_over_text = Text(background_color=BOARD_BACKGROUND_COLOR,
+                              background_rect=rect_game,
+                              color=(255, 255, 255))
+        game_over_text.print_text_centre(text='Game Over',
+                                         vert_pos=SCREEN_HEIGHT // 2 - 50)
+        game_over_text.print_text_centre(text='Нажмите ESCAPE '
+                                         'чтобы выйти из игры',
+                                         vert_pos=SCREEN_HEIGHT // 2)
+        game_over_text.print_text_centre(text='Нажмите ВВЕРХ '
+                                         'чтобы начать новую игру',
+                                         vert_pos=SCREEN_HEIGHT // 2 + 50)
+
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                raise SystemExit
+            elif event.type == pg.KEYDOWN:
+                if event.key == pg.K_UP:
+                    main()
+                elif event.key == pg.K_ESCAPE:
+                    pg.quit()
 
         pg.display.update()
 
