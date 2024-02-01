@@ -1,56 +1,14 @@
 from random import randint
-from source.game_objects import Apple, Snail, Snake, Obstacle
-from source.constants import *
+from source.game_objects import Apple, Snail, Snake, Obstacle, Hammer
+from source.constants import (BOARD_BACKGROUND_COLOR as B_B_C, RESULT_COLOR,
+                              SCREEN_WIDTH, screen, UP, DOWN, LEFT, RIGHT,
+                              SCREEN_HEIGHT, RESULT_HEIGHT, rect_game,
+                              rect_game_score, rect_speed, rect_bonus)
 
 import pygame as pg
 
 # Инициализация pg:
 pg.init()
-
-# Константы для размеров поля и сетки:
-SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
-GRID_SIZE = 20
-GRID_WIDTH = SCREEN_WIDTH // GRID_SIZE
-GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
-RESULT_HEIGHT = 50
-
-# Направления движения:
-UP = (0, -1)
-DOWN = (0, 1)
-LEFT = (-1, 0)
-RIGHT = (1, 0)
-
-# Цвет фона - черный:
-BOARD_BACKGROUND_COLOR = (0, 0, 0)
-
-# Цвет границы ячейки
-BORDER_COLOR = (93, 216, 228)
-
-# Цвет яблока
-APPLE_COLOR = (139, 0, 0)
-
-# Цвет змейки
-SNAKE_COLOR = (240, 255, 255)
-SNAKE_COLOR_2 = (0, 191, 255)
-
-# Цвет препятствия
-OBSTACLE_COLOR = (178, 34, 34)
-
-# Цвет поля для ведения счета
-RESULT_COLOR = (240, 255, 255)
-
-# Начальная позиция (середина экрана)
-START_POSITION = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-
-# Настройка игрового окна:
-screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + RESULT_HEIGHT),
-                             0, 32)
-
-# Определение областей
-rect_game = pg.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
-rect_game_score = pg.Rect(0, SCREEN_HEIGHT, SCREEN_WIDTH, RESULT_HEIGHT // 2)
-rect_speed = pg.Rect(0, SCREEN_HEIGHT + RESULT_HEIGHT // 2,
-                     SCREEN_WIDTH, SCREEN_HEIGHT // 2)
 
 # Заголовок окна игрового поля:
 pg.display.set_caption('Змейка')
@@ -120,13 +78,20 @@ def main():
     obstacle_timer = 0
     obstacle_visible = False
 
+    hammer_timer = 0
+    hammer_vision = False
+
+    snake_bonus_timer = 0
+    snake_bonus_duration = 20000
+
     snake = Snake()
     apple = Apple()
     snail = Snail()
+    hammer = Hammer()
     obstacle = Obstacle()
     # Делаем заливку игрового поля
-    screen.fill(BOARD_BACKGROUND_COLOR, rect_game)
-    # Добавляем счетчики очков
+    screen.fill(B_B_C, rect_game)
+    # Добавляем счетчики очков и бонусов
     score_text = Text(background_rect=rect_game_score)
     speed_text = Text(background_rect=rect_speed)
     score_text.print_text(text=f'Съедено яблок: {snake.length - 1}',
@@ -134,14 +99,19 @@ def main():
     speed_text.print_text(text=f'Ваша скорость: {speed}',
                           text_position=(10,
                                          SCREEN_HEIGHT + RESULT_HEIGHT // 2))
+    bonus_text = Text(background_rect=rect_bonus)
+    bonus_text.print_text(text='Ваш бонус:',
+                          text_position=(SCREEN_WIDTH // 2,
+                                         SCREEN_HEIGHT))
+
     running = True
+
+    obstacle_duration = randint(5000, 25000)
+    hammer_duration = randint(5000, 25000)
 
     while running:
         # Задаем скорость игры
         clock.tick(speed)
-
-        # Время в миллисекундах для появления/исчезновени
-        obstacle_duration = randint(5000, 25000)
 
         # Рисуем яблоко и улитку
         apple.draw()
@@ -152,7 +122,7 @@ def main():
         snake.update_direction()
         snake.move()
 
-        # Обновление препятствий
+        # Создание препятствий
         obstacle_timer += speed * 10
         if obstacle_timer >= obstacle_duration:
             obstacle_visible = not obstacle_visible
@@ -166,11 +136,56 @@ def main():
                 obstacle.delete(screen)
                 obstacle.position = []
 
+        # Создание молота
+        hammer_timer += speed * 10
+        if hammer_timer >= hammer_duration and snake.bonus is not True:
+            hammer_vision = not hammer_vision
+            hammer_timer = 0
+            if hammer_vision:
+                hammer.randomize_position(apple_pos=apple.position,
+                                          snake_pos=snake.positions,
+                                          snail_pos=snail.position,
+                                          obstacle_pos=obstacle.position)
+                hammer.draw()
+            else:
+                # screen.fill(B_B_C, hammer.hammer_rect)
+                hammer.draw_cell(screen, hammer.position,
+                                 B_B_C, B_B_C)
+                hammer.position = ()
+
+        # Делаем бонусную голову змеи временной
+        if snake.bonus is True:
+            snake_bonus_timer += speed * 10
+            if snake_bonus_timer >= snake_bonus_duration:
+                snake.bonus = False
+                snake_bonus_timer = 0
+                snake.delete_bonus_head(screen)
+                snake.bonus_positions = []
+                bonus_text = Text(background_rect=rect_bonus)
+                bonus_text.print_text(text='Ваш бонус:',
+                                      text_position=(SCREEN_WIDTH // 2,
+                                                     SCREEN_HEIGHT))
+
         # Рисуем змею
         snake.draw(screen)
 
+        # Проверяем съела ли змея молот
+        if snake.positions[0] == hammer.position:
+            snake.bonus = True
+            hammer.randomize_position(apple_pos=apple.position,
+                                      snake_pos=snake.positions,
+                                      snail_pos=snail.position,
+                                      obstacle_pos=obstacle.position)
+            # pg.display.update(hammer.hammer_rect)
+            screen.fill(B_B_C, hammer.hammer_rect)
+            bonus_text = Text(background_rect=rect_bonus)
+            bonus_text.print_text(text='Ваш бонус: Молот Тора',
+                                  text_position=(SCREEN_WIDTH // 2,
+                                                 SCREEN_HEIGHT))
+
         # Если змея съела яблоко:
-        if snake.positions[0] == apple.position:
+        if (snake.positions[0] == apple.position
+                or apple.position in snake.bonus_positions):
             # Увеличиваем длину змеи на 1
             snake.length += 1
             # Увеличиваем скорость змеи на 1
@@ -188,7 +203,8 @@ def main():
                                                  + RESULT_HEIGHT // 2))
 
         # Если змея съела улитку:
-        if snake.positions[0] == snail.position:
+        if (snake.positions[0] == snail.position
+                or snail.position in snake.bonus_positions):
             # Уменьшаем скорость змеи на 1
             speed -= 1
             # Задаем улитке новые рандомные координаты
@@ -205,13 +221,19 @@ def main():
             # Прерываем игровой цикл и перекидывает на экран выбора действий
             running = False
 
+        # Если бонусная часть змея попала на препятствие:
+        if snake.bonus_positions:
+            if (snake.bonus_positions[0] in obstacle.position
+               or snake.bonus_positions[1] in obstacle.position):
+                running = False
+
         pg.display.update()
 
     show_result = True
     while show_result:
         clock.tick(speed)
         # Добавляем текст на игровое поле
-        game_over_text = Text(background_color=BOARD_BACKGROUND_COLOR,
+        game_over_text = Text(background_color=B_B_C,
                               background_rect=rect_game,
                               color=(255, 255, 255))
         game_over_text.print_text_centre(text='Game Over',

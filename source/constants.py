@@ -41,6 +41,15 @@ screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + RESULT_HEIGHT),
 
 # Определение областей
 rect_game = pg.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
-rect_game_score = pg.Rect(0, SCREEN_HEIGHT, SCREEN_WIDTH, RESULT_HEIGHT // 2)
-rect_speed = pg.Rect(0, SCREEN_HEIGHT + RESULT_HEIGHT // 2,
-                     SCREEN_WIDTH, SCREEN_HEIGHT // 2)
+rect_game_score = pg.Rect(0,
+                          SCREEN_HEIGHT,
+                          SCREEN_WIDTH // 2,
+                          RESULT_HEIGHT // 2)
+rect_speed = pg.Rect(0,
+                     SCREEN_HEIGHT + RESULT_HEIGHT // 2,
+                     SCREEN_WIDTH,
+                     SCREEN_HEIGHT // 2)
+rect_bonus = pg.Rect(SCREEN_WIDTH // 2,
+                     SCREEN_HEIGHT,
+                     SCREEN_WIDTH // 2,
+                     RESULT_HEIGHT // 2)
