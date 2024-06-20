@@ -1,9 +1,15 @@
 from random import choice, randrange, randint
+
+import pygame as pg
+
 from .constants import (START_POSITION, GRID_SIZE, SNAKE_COLOR, SNAKE_COLOR_2,
                         BORDER_COLOR, SCREEN_HEIGHT, SCREEN_WIDTH,
                         BOARD_BACKGROUND_COLOR, UP, DOWN, LEFT, RIGHT,
-                        OBSTACLE_COLOR, screen)
-import pygame as pg
+                        OBSTACLE_COLOR, RESULT_HEIGHT)
+
+# Настройка игрового окна:
+screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + RESULT_HEIGHT),
+                             0, 32)
 
 # Загружаем картинку
 apple_image = pg.image.load('images/apple.png')
@@ -35,14 +41,14 @@ class Snake(GameObject):
                  body_color=SNAKE_COLOR,
                  body_color_2=SNAKE_COLOR_2,
                  border_color=BORDER_COLOR,
-                 bonus_positions=[],
+                 bonus_positions=None,
                  bonus=False):
         super().__init__(position=START_POSITION)
         self.reset()
         self.body_color_2 = body_color_2
         self.body_color = body_color
         self.border_color = border_color
-        self.bonus_positions = bonus_positions
+        self.bonus_positions = bonus_positions or []
         self.bonus = bonus
 
     def update_direction(self):
@@ -138,7 +144,6 @@ class Snake(GameObject):
                 (GRID_SIZE, GRID_SIZE)
             )
             pg.draw.rect(surface, BOARD_BACKGROUND_COLOR, last_rect)
-            last_rect = None
 
 
 class Obstacle(GameObject):
@@ -146,16 +151,21 @@ class Obstacle(GameObject):
 
     def __init__(self,
                  body_color=OBSTACLE_COLOR,
-                 border_color=BORDER_COLOR):
+                 border_color=BORDER_COLOR,
+                 size=randint(5, 15)):
         super().__init__(position=[])
         self.position = []
         self.body_color = body_color
         self.border_color = border_color
+        self.size = size
 
-    def randomize_position(self, snake_positions=[START_POSITION],
-                           apple_position=START_POSITION,
-                           snail_position=START_POSITION):
+    def randomize_position(self, snake_positions=None,
+                           apple_position=None,
+                           snail_position=None):
         """Генерация рандомной позиции препятствия на игровом поле"""
+        snake_positions = snake_positions or [START_POSITION]
+        apple_position = apple_position or START_POSITION
+        snail_position = snail_position or START_POSITION
         # определяем допустимый диапозон по ширине и высоте
         self.size = randint(5, 15)
         pos_range_x = SCREEN_WIDTH - GRID_SIZE
@@ -165,9 +175,9 @@ class Obstacle(GameObject):
                           randrange(0, pos_range_y, GRID_SIZE))]
         # Если она совпала с одной из координат змейки, яблока или улитки,
         # то генерим новые координаты, пока не попадем мимо
-        while self.position[0] in snake_positions or \
-                self.position[0] == apple_position or \
-                self.position[0] == snail_position:
+        while (self.position[0] in snake_positions
+                or self.position[0] == apple_position
+                or self.position[0] == snail_position):
             self.position = [(randrange(0, pos_range_x, GRID_SIZE),
                               randrange(0, pos_range_y, GRID_SIZE))]
 
@@ -193,10 +203,10 @@ class Obstacle(GameObject):
                 # Проверяем, не вышли ли координаты за поле
                 if 0 <= new_x <= pos_range_x and 0 <= new_y <= pos_range_y:
                     # Проверяем, не совпадают ли координаты с предыдущими
-                    if (new_x, new_y) not in self.position[:index] and \
-                       (new_x, new_y) not in snake_positions and \
-                       (new_x, new_y) != apple_position and \
-                       (new_x, new_y) != snail_position:
+                    if ((new_x, new_y) not in self.position[:index]
+                       and (new_x, new_y) not in snake_positions
+                       and (new_x, new_y) != apple_position
+                       and (new_x, new_y) != snail_position):
                         self.position.append((new_x, new_y))
                         position_valid = True
                 attempt += 1
@@ -231,8 +241,9 @@ class Apple(GameObject):
         self.apple_rect = self.apple_size.get_rect(x=self.position[0],
                                                    y=self.position[1])
 
-    def randomize_position(self, positions=[START_POSITION]):
+    def randomize_position(self, positions=None):
         """Генерация рандомной позиции яблока на игровом поле"""
+        positions = positions or [START_POSITION]
         # определяем допустимый диапозон по ширине и высоте
         pos_range_x = SCREEN_WIDTH - GRID_SIZE
         pos_range_y = SCREEN_HEIGHT - GRID_SIZE
@@ -264,8 +275,9 @@ class Snail(GameObject):
         self.snail_rect = self.snail_size.get_rect(x=self.position[0],
                                                    y=self.position[1])
 
-    def randomize_position(self, positions=[START_POSITION]):
+    def randomize_position(self, positions=None):
         """Генерация рандомной позиции улитка на игровом поле"""
+        positions = positions or [START_POSITION]
         # определяем допустимый диапозон по ширине и высоте
         pos_range_x = SCREEN_WIDTH - GRID_SIZE
         pos_range_y = SCREEN_HEIGHT - GRID_SIZE
@@ -286,7 +298,7 @@ class Snail(GameObject):
 
 
 class Hammer(GameObject):
-    """Класс для описания улитки"""
+    """Класс для описания молота"""
 
     def __init__(self):
         super().__init__()
@@ -313,10 +325,10 @@ class Hammer(GameObject):
                          randrange(0, pos_range_y, GRID_SIZE))
         # Если она совпала с одной из координат змейки, то генерим новые
         # координаты, пока не попадем мимо змейки
-        while self.position == apple_pos \
-                or self.position in snake_pos \
-                or self.position == snail_pos \
-                or self.position in obstacle_pos:
+        while (self.position == apple_pos
+                or self.position in snake_pos
+                or self.position == snail_pos
+                or self.position in obstacle_pos):
             self.position = (randrange(0, pos_range_x, GRID_SIZE),
                              randrange(0, pos_range_y, GRID_SIZE))
 

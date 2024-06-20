@@ -1,5 +1,3 @@
-import pygame as pg
-
 # Константы для размеров поля и сетки:
 SCREEN_WIDTH, SCREEN_HEIGHT = 640, 480
 GRID_SIZE = 20
@@ -34,22 +32,3 @@ RESULT_COLOR = (240, 255, 255)
 
 # Начальная позиция (середина экрана)
 START_POSITION = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
-
-# Настройка игрового окна:
-screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + RESULT_HEIGHT),
-                             0, 32)
-
-# Определение областей
-rect_game = pg.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
-rect_game_score = pg.Rect(0,
-                          SCREEN_HEIGHT,
-                          SCREEN_WIDTH // 2,
-                          RESULT_HEIGHT // 2)
-rect_speed = pg.Rect(0,
-                     SCREEN_HEIGHT + RESULT_HEIGHT // 2,
-                     SCREEN_WIDTH,
-                     SCREEN_HEIGHT // 2)
-rect_bonus = pg.Rect(SCREEN_WIDTH // 2,
-                     SCREEN_HEIGHT,
-                     SCREEN_WIDTH // 2,
-                     RESULT_HEIGHT // 2)

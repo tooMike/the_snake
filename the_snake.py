@@ -1,11 +1,12 @@
 from random import randint
-from source.game_objects import Apple, Snail, Snake, Obstacle, Hammer
-from source.constants import (BOARD_BACKGROUND_COLOR as B_B_C, RESULT_COLOR,
-                              SCREEN_WIDTH, screen, UP, DOWN, LEFT, RIGHT,
-                              SCREEN_HEIGHT, RESULT_HEIGHT, rect_game,
-                              rect_game_score, rect_speed, rect_bonus)
 
 import pygame as pg
+
+from source.game_objects import Apple, Snail, Snake, Obstacle, Hammer
+from source.constants import (BOARD_BACKGROUND_COLOR as B_B_C, RESULT_COLOR,
+                              SCREEN_WIDTH, UP, DOWN, LEFT, RIGHT,
+                              SCREEN_HEIGHT, RESULT_HEIGHT)
+
 
 # Инициализация pg:
 pg.init()
@@ -23,6 +24,25 @@ font = pg.font.SysFont('couriernew', 20)
 apple_image = pg.image.load('images/apple.png')
 snail_image = pg.image.load('images/snail.png')
 
+# Настройка игрового окна:
+screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + RESULT_HEIGHT),
+                             0, 32)
+
+# Определение областей
+rect_game = pg.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+rect_game_score = pg.Rect(0,
+                          SCREEN_HEIGHT,
+                          SCREEN_WIDTH // 2,
+                          RESULT_HEIGHT // 2)
+rect_speed = pg.Rect(0,
+                     SCREEN_HEIGHT + RESULT_HEIGHT // 2,
+                     SCREEN_WIDTH,
+                     SCREEN_HEIGHT // 2)
+rect_bonus = pg.Rect(SCREEN_WIDTH // 2,
+                     SCREEN_HEIGHT,
+                     SCREEN_WIDTH // 2,
+                     RESULT_HEIGHT // 2)
+
 
 class Text():
     """Класс текста"""
@@ -30,10 +50,14 @@ class Text():
     def __init__(self,
                  background_rect,
                  background_color=RESULT_COLOR,
-                 color=(0, 0, 0)):
+                 color=(0, 0, 0),
+                 text=None,
+                 text_rect=None):
         self.background_rect = background_rect
         self.background_color = background_color
         self.color = color
+        self.text = text
+        self.text_rect = text_rect
         screen.fill(self.background_color, self.background_rect)
 
     def print_text(self, text, text_position):
@@ -108,7 +132,7 @@ def main():
 
     obstacle_duration = randint(5000, 25000)
     hammer_duration = randint(5000, 25000)
-
+    
     while running:
         # Задаем скорость игры
         clock.tick(speed)
